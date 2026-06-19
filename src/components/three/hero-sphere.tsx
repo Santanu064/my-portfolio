@@ -65,12 +65,31 @@ export function HeroSphere() {
       return orbit;
     });
 
-    const nodeMaterial = new THREE.MeshPhongMaterial({
-      color: 0x9cf0ff,
-      emissive: 0x00daf3,
-      emissiveIntensity: 0.85,
-      transparent: true,
-      opacity: 0.95,
+    const logoUrls = [
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg",
+      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg",
+    ];
+
+    const textureLoader = new THREE.TextureLoader();
+    const logoMaterials = logoUrls.map((url) => {
+      const texture = textureLoader.load(url);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+      });
     });
 
     const nodePositions = [
@@ -90,11 +109,14 @@ export function HeroSphere() {
       [0.08, 3.26, 0.0, 0.11],
     ] as const;
 
-    const nodes = nodePositions.map(([x, y, z, size]) => {
-      const node = new THREE.Mesh(new THREE.IcosahedronGeometry(size, 0), nodeMaterial);
-      node.position.set(x, y, z);
-      group.add(node);
-      return node;
+    const nodes = nodePositions.map(([x, y, z, size], index) => {
+      const material = logoMaterials[index % logoMaterials.length];
+      const sprite = new THREE.Sprite(material);
+      sprite.position.set(x, y, z);
+      const scaleFactor = size * 2.4;
+      sprite.scale.set(scaleFactor, scaleFactor, 1.0);
+      group.add(sprite);
+      return sprite;
     });
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.48));
@@ -130,7 +152,9 @@ export function HeroSphere() {
           orbit.rotation.z += 0.0008 + index * 0.00022;
         });
         nodes.forEach((node, index) => {
-          node.scale.setScalar(1 + Math.sin(elapsed * 1.8 + index) * 0.12);
+          const size = nodePositions[index][3];
+          const scaleFactor = size * 2.4 * (1 + Math.sin(elapsed * 1.8 + index) * 0.12);
+          node.scale.set(scaleFactor, scaleFactor, 1.0);
         });
         renderer.render(scene, camera);
       }
@@ -152,7 +176,10 @@ export function HeroSphere() {
       shell.material.dispose();
       orbits.forEach((orbit) => orbit.geometry.dispose());
       orbitMaterial.dispose();
-      nodeMaterial.dispose();
+      logoMaterials.forEach((material) => {
+        if (material.map) material.map.dispose();
+        material.dispose();
+      });
       container.replaceChildren();
     };
   }, []);
