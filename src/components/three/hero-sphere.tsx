@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 export function HeroSphere() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -134,7 +135,17 @@ export function HeroSphere() {
       "/logos/postgresql.svg",
     ];
 
-    const textureLoader = new THREE.TextureLoader();
+    // Create a Loading Manager to fade in everything together once ready
+    const manager = new THREE.LoadingManager();
+    manager.onLoad = () => {
+      setIsLoaded(true);
+    };
+    manager.onError = (url) => {
+      console.warn("Failed to load texture:", url);
+      setIsLoaded(true); // render anyway if one fails
+    };
+
+    const textureLoader = new THREE.TextureLoader(manager);
     const logoMaterials = logoUrls.map((url) => {
       const texture = textureLoader.load(url);
       texture.colorSpace = THREE.SRGBColorSpace;
@@ -253,5 +264,16 @@ export function HeroSphere() {
     };
   }, []);
 
-  return <div ref={containerRef} aria-hidden="true" style={{ width: "100%", height: "100%" }} />;
+  return (
+    <div
+      ref={containerRef}
+      aria-hidden="true"
+      style={{
+        width: "100%",
+        height: "100%",
+        opacity: isLoaded ? 1 : 0,
+        transition: "opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
+      }}
+    />
+  );
 }
