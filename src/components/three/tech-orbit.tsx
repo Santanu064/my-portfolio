@@ -24,7 +24,7 @@ export function TechOrbit() {
     container.appendChild(renderer.domElement);
     scene.add(orbitGroup);
 
-    const texture = new THREE.TextureLoader().load("/brain-premium.png");
+    const texture = new THREE.TextureLoader().load("/brain-premium.webp");
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 

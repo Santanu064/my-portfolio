@@ -17,6 +17,18 @@ export function HeroSphere() {
     const group = new THREE.Group();
     let frame = 0;
     const startedAt = performance.now();
+    let texturesLoaded = false;
+    let renderedFramesAfterLoad = 0;
+
+    // Create a Loading Manager to fade in everything together once ready
+    const manager = new THREE.LoadingManager();
+    manager.onLoad = () => {
+      texturesLoaded = true;
+    };
+    manager.onError = (url) => {
+      console.warn("Failed to load texture:", url);
+      texturesLoaded = true; // Proceed anyway if one fails
+    };
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
@@ -36,32 +48,19 @@ export function HeroSphere() {
     };
     window.addEventListener("mousemove", handleMouseMove);
 
-    // Core Material with pulsating emissive color
-    const coreMaterial = new THREE.MeshPhongMaterial({
-      color: 0x007f91,
-      emissive: 0x003c46,
-      emissiveIntensity: 0.32,
+    // Load the premium generated globe WebP as a central sprite
+    const globeTexture = new THREE.TextureLoader(manager).load("/globe.webp");
+    globeTexture.colorSpace = THREE.SRGBColorSpace;
+    const globeMaterial = new THREE.SpriteMaterial({
+      map: globeTexture,
       transparent: true,
-      opacity: 0.28,
-      shininess: 70,
+      depthTest: true,
+      depthWrite: false,
     });
 
-    const core = new THREE.Mesh(new THREE.SphereGeometry(1.9, 64, 64), coreMaterial);
-    group.add(core);
-
-    // Shell Material updated to MeshPhongMaterial to catch light specularity
-    const shellMaterial = new THREE.MeshPhongMaterial({
-      color: 0x00e5ff,
-      emissive: 0x002c33,
-      emissiveIntensity: 0.28,
-      shininess: 90,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.35,
-    });
-
-    const shell = new THREE.Mesh(new THREE.SphereGeometry(1.92, 72, 72), shellMaterial);
-    group.add(shell);
+    const globeSprite = new THREE.Sprite(globeMaterial);
+    globeSprite.scale.set(4.1, 4.1, 1.0);
+    group.add(globeSprite);
 
     const orbitMaterial = new THREE.MeshBasicMaterial({
       color: 0x2979ff,
@@ -135,15 +134,7 @@ export function HeroSphere() {
       "/logos/postgresql.svg",
     ];
 
-    // Create a Loading Manager to fade in everything together once ready
-    const manager = new THREE.LoadingManager();
-    manager.onLoad = () => {
-      setIsLoaded(true);
-    };
-    manager.onError = (url) => {
-      console.warn("Failed to load texture:", url);
-      setIsLoaded(true); // render anyway if one fails
-    };
+
 
     const textureLoader = new THREE.TextureLoader(manager);
     const logoMaterials = logoUrls.map((url) => {
@@ -194,12 +185,21 @@ export function HeroSphere() {
     );
     observer.observe(container);
 
+    let isSized = false;
+
     const resize = () => {
       const { clientWidth, clientHeight } = container;
+      if (clientWidth === 0 || clientHeight === 0) return;
       renderer.setSize(clientWidth, clientHeight, false);
-      camera.aspect = clientWidth / Math.max(clientHeight, 1);
+      camera.aspect = clientWidth / clientHeight;
       camera.updateProjectionMatrix();
+      isSized = true;
     };
+
+    const resizeObserver = new ResizeObserver(() => {
+      resize();
+    });
+    resizeObserver.observe(container);
 
     const animate = () => {
       if (isVisible) {
@@ -209,16 +209,14 @@ export function HeroSphere() {
         currentRotationX += (targetRotationX - currentRotationX) * 0.05;
         currentRotationY += (targetRotationY - currentRotationY) * 0.05;
 
-        group.rotation.y = elapsed * 0.18 + currentRotationY;
-        group.rotation.x = Math.sin(elapsed * 0.3) * 0.08 + currentRotationX;
+        // Added default tilts (0.35 and -0.12) to ensure the 3D perspective is immediate
+        group.rotation.y = elapsed * 0.18 + currentRotationY + 0.35;
+        group.rotation.x = Math.sin(elapsed * 0.3) * 0.08 + currentRotationX - 0.12;
 
-        shell.rotation.y = elapsed * 0.08;
-        core.rotation.y = elapsed * 0.06;
-
-        // Core pulsating breathing animation
-        const pulse = 1 + Math.sin(elapsed * 1.5) * 0.05;
-        core.scale.setScalar(pulse);
-        coreMaterial.emissiveIntensity = 0.32 + Math.sin(elapsed * 1.5) * 0.15;
+        // Globe pulsating breathing and rotation animation
+        const pulse = 4.1 * (1 + Math.sin(elapsed * 1.5) * 0.04);
+        globeSprite.scale.set(pulse, pulse, 1.0);
+        globeSprite.rotation.z = -elapsed * 0.04;
 
         // Rotate particles opposite direction
         particles.rotation.y = -elapsed * 0.04;
@@ -234,24 +232,30 @@ export function HeroSphere() {
         });
 
         renderer.render(scene, camera);
+
+        // Delay setting isLoaded until the GPU has fully compiled and drawn the textures
+        // We now check isSized and wait 10 frames (160ms) to ensure stable aspect ratio rendering in background before fade-in
+        if (texturesLoaded && isSized && container.clientWidth > 0 && container.clientHeight > 0) {
+          renderedFramesAfterLoad++;
+          if (renderedFramesAfterLoad >= 10) {
+            setIsLoaded(true);
+          }
+        }
       }
       frame = window.requestAnimationFrame(animate);
     };
 
     resize();
     animate();
-    window.addEventListener("resize", resize);
 
     return () => {
       observer.disconnect();
+      resizeObserver.disconnect();
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMouseMove);
       renderer.dispose();
-      core.geometry.dispose();
-      coreMaterial.dispose();
-      shell.geometry.dispose();
-      shellMaterial.dispose();
+      if (globeMaterial.map) globeMaterial.map.dispose();
+      globeMaterial.dispose();
       orbits.forEach((orbit) => orbit.geometry.dispose());
       orbitMaterial.dispose();
       particleGeometry.dispose();
