@@ -1,0 +1,118 @@
+.wrapper {
+  position: fixed;
+  right: clamp(1rem, 4vw, 2.5rem);
+  bottom: clamp(1rem, 4vw, 2.5rem);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.panel {
+  width: min(20rem, calc(100vw - 2rem));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.2rem;
+  background: rgba(22, 27, 34, 0.78);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  padding: 1.3rem;
+  pointer-events: none;
+  transform: translateY(0.8rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.panelOpen {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.85rem;
+}
+
+.panelHeader span,
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panelHeader span {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--cyan);
+  color: var(--background);
+}
+
+.panelHeader strong {
+  font-size: 0.95rem;
+}
+
+.panel p {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.panel div:last-child {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.panel button {
+  min-height: 2.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+}
+
+.panel button:hover {
+  border-color: rgba(0, 229, 255, 0.5);
+}
+
+.toggle {
+  position: relative;
+  width: 4rem;
+  height: 4rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cyan);
+  color: var(--background);
+  cursor: pointer;
+  box-shadow: 0 18px 50px rgba(0, 229, 255, 0.24);
+}
+
+.toggle > span {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(0, 229, 255, 0.24);
+  animation: assistantPing 1.7s ease-out infinite;
+}
+
+.toggle svg {
+  position: relative;
+}
+
+@keyframes assistantPing {
+  to {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}

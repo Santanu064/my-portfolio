@@ -1,0 +1,155 @@
+.section {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    var(--surface);
+}
+
+.heading {
+  max-width: min(54rem, 100%);
+  margin: 0 auto clamp(3.5rem, 7vw, 6rem);
+  text-align: center;
+}
+
+.heading h2 {
+  margin: 0;
+  font-size: clamp(2.1rem, 5vw, 5.2rem);
+  font-weight: 850;
+  line-height: 1.08;
+}
+
+.heading p {
+  margin: 1rem auto 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: min(48rem, 100%);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(18rem, 0.8fr);
+  gap: clamp(1.4rem, 3vw, 3rem);
+}
+
+.heatmapCard,
+.techCard {
+  border-radius: 1.2rem;
+  padding: clamp(1.4rem, 4vw, 2.5rem);
+}
+
+.heatmapCard h3,
+.techCard h3 {
+  margin: 0 0 2rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0.65rem, 1fr));
+  gap: 0.38rem;
+}
+
+.heatmap span {
+  aspect-ratio: 1;
+  border-radius: 0.18rem;
+  background: var(--cyan);
+}
+
+@media (min-width: 1800px) {
+  .heatmap {
+    grid-template-columns: repeat(40, 1fr);
+  }
+
+  .heatmapCard,
+  .techCard {
+    padding: clamp(2.5rem, 2vw, 4rem);
+  }
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.legend div {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.legend i {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.16rem;
+  background: var(--cyan);
+}
+
+.bars {
+  display: grid;
+  gap: 1.45rem;
+}
+
+.barGroup {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.barGroup > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.track {
+  display: block;
+  overflow: hidden;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--blue));
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .heatmap {
+    grid-template-columns: repeat(14, 1fr);
+  }
+
+  .legend {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 1800px) {
+  .heading h2 {
+    font-size: clamp(3.2rem, 4.8vh, 4.8rem);
+  }
+}
