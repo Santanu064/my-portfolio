@@ -21,6 +21,21 @@ export function HeroSphere() {
     container.appendChild(renderer.domElement);
     scene.add(group);
 
+    // Mouse interactive parallax variables
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+    let currentRotationX = 0;
+    let currentRotationY = 0;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const x = (event.clientX / window.innerWidth) * 2 - 1;
+      const y = (event.clientY / window.innerHeight) * 2 - 1;
+      targetRotationY = x * 0.28;
+      targetRotationX = y * 0.28;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // Core Material with pulsating emissive color
     const coreMaterial = new THREE.MeshPhongMaterial({
       color: 0x007f91,
       emissive: 0x003c46,
@@ -33,15 +48,18 @@ export function HeroSphere() {
     const core = new THREE.Mesh(new THREE.SphereGeometry(1.9, 64, 64), coreMaterial);
     group.add(core);
 
-    const shell = new THREE.Mesh(
-      new THREE.SphereGeometry(1.92, 72, 72),
-      new THREE.MeshBasicMaterial({
-        color: 0x00e5ff,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.28,
-      }),
-    );
+    // Shell Material updated to MeshPhongMaterial to catch light specularity
+    const shellMaterial = new THREE.MeshPhongMaterial({
+      color: 0x00e5ff,
+      emissive: 0x002c33,
+      emissiveIntensity: 0.28,
+      shininess: 90,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35,
+    });
+
+    const shell = new THREE.Mesh(new THREE.SphereGeometry(1.92, 72, 72), shellMaterial);
     group.add(shell);
 
     const orbitMaterial = new THREE.MeshBasicMaterial({
@@ -65,19 +83,55 @@ export function HeroSphere() {
       return orbit;
     });
 
+    // Particle field (Starfield/Energy dust)
+    const particleGeometry = new THREE.BufferGeometry();
+    const particleCount = 180;
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount; i++) {
+      const r = 2.0 + Math.random() * 2.2;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(Math.random() * 2 - 1);
+
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+
+      const isCyan = Math.random() > 0.4;
+      colors[i * 3] = isCyan ? 0.0 : 0.16;
+      colors[i * 3 + 1] = isCyan ? 0.9 : 0.47;
+      colors[i * 3 + 2] = 1.0;
+    }
+
+    particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.045,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    group.add(particles);
+
     const logoUrls = [
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg",
-      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg",
+      "/logos/javascript.svg",
+      "/logos/react.svg",
+      "/logos/nextjs.svg",
+      "/logos/typescript.svg",
+      "/logos/nodejs.svg",
+      "/logos/html5.svg",
+      "/logos/css3.svg",
+      "/logos/tailwindcss.svg",
+      "/logos/git.svg",
+      "/logos/github.svg",
+      "/logos/mongodb.svg",
+      "/logos/postgresql.svg",
     ];
 
     const textureLoader = new THREE.TextureLoader();
@@ -89,34 +143,29 @@ export function HeroSphere() {
         transparent: true,
         depthTest: true,
         depthWrite: false,
+        color: new THREE.Color(0x00e5ff),
       });
     });
 
-    const nodePositions = [
-      [-2.72, 0.78, 0.18, 0.18],
-      [-2.42, -1.28, 0.02, 0.09],
-      [-1.48, -2.36, 0.2, 0.13],
-      [-0.68, 2.68, -0.14, 0.11],
-      [-0.26, -2.94, 0.08, 0.08],
-      [0.42, 1.16, 0.44, 0.13],
-      [1.22, 2.34, -0.1, 0.08],
-      [1.72, -2.28, 0.16, 0.08],
-      [2.42, 1.08, -0.18, 0.09],
-      [2.7, -0.02, 0.2, 0.07],
-      [2.02, -1.76, 0.04, 0.13],
-      [-0.92, 0.44, 0.5, 0.06],
-      [0.9, -0.78, 0.48, 0.06],
-      [0.08, 3.26, 0.0, 0.11],
-    ] as const;
+    const nodes = logoUrls.map((url, index) => {
+      const orbitIndex = index % orbitConfigs.length;
+      const config = orbitConfigs[orbitIndex];
+      const theta = (index / logoUrls.length) * Math.PI * 2 + (index * 0.52);
 
-    const nodes = nodePositions.map(([x, y, z, size], index) => {
-      const material = logoMaterials[index % logoMaterials.length];
+      const pos = new THREE.Vector3(config.radius * Math.cos(theta), config.radius * Math.sin(theta), 0);
+      const euler = new THREE.Euler(config.rotation[0], config.rotation[1], config.rotation[2]);
+      pos.applyEuler(euler);
+
+      const material = logoMaterials[index];
       const sprite = new THREE.Sprite(material);
-      sprite.position.set(x, y, z);
-      const scaleFactor = size * 2.4;
+      sprite.position.copy(pos);
+
+      const size = index % 3 === 0 ? 0.13 : (index % 2 === 0 ? 0.105 : 0.085);
+      const scaleFactor = size * 2.8;
       sprite.scale.set(scaleFactor, scaleFactor, 1.0);
+
       group.add(sprite);
-      return sprite;
+      return { sprite, size };
     });
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.48));
@@ -144,18 +193,35 @@ export function HeroSphere() {
     const animate = () => {
       if (isVisible) {
         const elapsed = (performance.now() - startedAt) / 1000;
-        group.rotation.y = elapsed * 0.18;
-        group.rotation.x = Math.sin(elapsed * 0.3) * 0.08;
+
+        // Smooth mouse lerp
+        currentRotationX += (targetRotationX - currentRotationX) * 0.05;
+        currentRotationY += (targetRotationY - currentRotationY) * 0.05;
+
+        group.rotation.y = elapsed * 0.18 + currentRotationY;
+        group.rotation.x = Math.sin(elapsed * 0.3) * 0.08 + currentRotationX;
+
         shell.rotation.y = elapsed * 0.08;
         core.rotation.y = elapsed * 0.06;
+
+        // Core pulsating breathing animation
+        const pulse = 1 + Math.sin(elapsed * 1.5) * 0.05;
+        core.scale.setScalar(pulse);
+        coreMaterial.emissiveIntensity = 0.32 + Math.sin(elapsed * 1.5) * 0.15;
+
+        // Rotate particles opposite direction
+        particles.rotation.y = -elapsed * 0.04;
+        particles.rotation.z = elapsed * 0.015;
+
         orbits.forEach((orbit, index) => {
           orbit.rotation.z += 0.0008 + index * 0.00022;
         });
-        nodes.forEach((node, index) => {
-          const size = nodePositions[index][3];
-          const scaleFactor = size * 2.4 * (1 + Math.sin(elapsed * 1.8 + index) * 0.12);
-          node.scale.set(scaleFactor, scaleFactor, 1.0);
+
+        nodes.forEach(({ sprite, size }, index) => {
+          const scaleFactor = size * 2.8 * (1 + Math.sin(elapsed * 1.8 + index) * 0.12);
+          sprite.scale.set(scaleFactor, scaleFactor, 1.0);
         });
+
         renderer.render(scene, camera);
       }
       frame = window.requestAnimationFrame(animate);
@@ -169,13 +235,16 @@ export function HeroSphere() {
       observer.disconnect();
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", handleMouseMove);
       renderer.dispose();
       core.geometry.dispose();
       coreMaterial.dispose();
       shell.geometry.dispose();
-      shell.material.dispose();
+      shellMaterial.dispose();
       orbits.forEach((orbit) => orbit.geometry.dispose());
       orbitMaterial.dispose();
+      particleGeometry.dispose();
+      particleMaterial.dispose();
       logoMaterials.forEach((material) => {
         if (material.map) material.map.dispose();
         material.dispose();
