@@ -40,7 +40,7 @@ export function HeroSection() {
             ))}
           </div>
         </div>
-        <div className={`reveal-up ${styles.visual}`}>
+        <div className={styles.visual}>
           <HeroSphere />
         </div>
       </div>
